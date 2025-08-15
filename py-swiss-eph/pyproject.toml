@@ -1,0 +1,7 @@
+[project]
+name = "py-swiss-eph"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "pyswisseph>=2.10.3.2",
+]

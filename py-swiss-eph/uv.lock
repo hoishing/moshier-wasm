@@ -1,0 +1,20 @@
+version = 1
+revision = 3
+requires-python = ">=3.12"
+
+[[package]]
+name = "py-swiss-eph"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "pyswisseph" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pyswisseph", specifier = ">=2.10.3.2" }]
+
+[[package]]
+name = "pyswisseph"
+version = "2.10.3.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/66/a6/db70d67a00dda42ebd033538c086879328f4c17f670eafe8aca2f11abfef/pyswisseph-2.10.3.2.tar.gz", hash = "sha256:c54c305e83dbd5d2b71e58d8a69d8ee41de24c4d3328ce09e2af860a3537624d", size = 6940913, upload-time = "2023-06-04T17:05:53.293Z" }

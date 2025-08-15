@@ -1,0 +1,36 @@
+{
+  "name": "moshier-wasm",
+  "version": "1.0.0",
+  "description": "moshier ephemeris in wasm",
+  "keywords": [
+    "moshier",
+    "astrology"
+  ],
+  "homepage": "https://github.com/hoishing/moshier-wasm#readme",
+  "bugs": {
+    "url": "https://github.com/hoishing/moshier-wasm/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hoishing/moshier-wasm.git"
+  },
+  "license": "AGPL",
+  "author": "Kelvin Ng",
+  "type": "module",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "jest",
+    "test:browser": "node tests/browser-test-runner.js",
+    "test:all": "npm run test && npm run test:browser"
+  },
+  "devDependencies": {
+    "jest": "^30.0.5",
+    "puppeteer": "^24.9.0",
+    "express": "^4.18.0",
+    "cors": "^2.8.5"
+  }
+}
