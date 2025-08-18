@@ -130,12 +130,12 @@ const char *astro(int year, int month, int day, int hour, int minute, int second
 
   length += snprintf(Buffer + length, buflen - length, "\"planets\":[ ");
 
-  for (p = SE_SUN; p < SE_NPLANETS; p++)
+  for (p = SE_SUN; p <= SE_MEAN_NODE; p++)
   {
     if (p == SE_EARTH)
       continue;
     strcpy(sChar, ", ");
-    if (p == SE_NPLANETS - 1)
+    if (p == SE_MEAN_NODE)
       strcpy(sChar, " ");
 
     iflagret = swe_calc_ut(tjd_ut, p, iflag, x, serr);
