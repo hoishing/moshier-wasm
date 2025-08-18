@@ -22,7 +22,7 @@ def planet_positions(utc_dt: datetime, id: int) -> tuple[float, float]:
 
 
 # %% 
-dt = datetime(2025, 1, 1, 0, 0, 0)
+dt = datetime(1976, 4, 20, 18, 58)
 
 bodies = {
     "SUN": 0,
@@ -54,8 +54,8 @@ def set_houses_vertices(julian_day: float, lat: float, lon: float, house_sys: st
     return cusps, asc_deg, mc_deg
 
 # %% 
-lat = 40.7128
-lon = 74.0060
+lat = 22.4
+lon = 114.1
 
 for hse in "PKORCEW":
     cusps, asc_deg, mc_deg = set_houses_vertices(julian_day(dt), lat, lon, hse)

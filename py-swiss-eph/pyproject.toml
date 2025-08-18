@@ -3,5 +3,6 @@ name = "py-swiss-eph"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "ipykernel>=6.30.1",
     "pyswisseph>=2.10.3.2",
 ]
