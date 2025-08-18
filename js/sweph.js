@@ -33,7 +33,7 @@ self.onmessage = function (messageEvent) {
 // house system (string, e.g., "P" for Placidus)
 self.get = function () {
   var calc = self.Module.ccall(
-    "get",
+    "astro",
     "string",
     [
       "number",

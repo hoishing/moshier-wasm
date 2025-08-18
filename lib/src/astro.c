@@ -104,7 +104,10 @@ return_dms:;
   return (s);
 }
 
-const char *astro(int year, int month, int day, int hour, int minute, double longitude, double latitude, char *iHouse, int buflen)
+#if USECASE == OFFLINE
+EMSCRIPTEN_KEEPALIVE
+#endif
+const char *astro(int year, int month, int day, int hour, int minute, double longitude, double latitude, char *iHouse)
 {
   char snam[40], serr[AS_MAXCH];
   double jut = 0.0;
@@ -114,6 +117,7 @@ const char *astro(int year, int month, int day, int hour, int minute, double lon
   long iflag, iflagret;
   int p, i;
   int round_flag = 0;
+  int32 buflen = 100000;
   char *Buffer = malloc(buflen);
   int length = 0;
   char *sChar = malloc(3);
@@ -177,12 +181,3 @@ const char *astro(int year, int month, int day, int hour, int minute, double lon
   return Buffer;
 }
 
-#if USECASE == OFFLINE
-EMSCRIPTEN_KEEPALIVE
-const char *get(int year, int month, int day, int hour, int minute, double longitude, double latitude, char *iHouse)
-{
-  int32 buflen;
-  buflen = 100000;
-  return astro(year, month, day, hour, minute, longitude, latitude, iHouse, buflen);
-}
-#endif

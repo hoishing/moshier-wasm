@@ -3615,14 +3615,14 @@ if (Module['wasmBinary']) wasmBinary = Module['wasmBinary'];
 
 
 // Imports from the Wasm binary.
-var _get,
+var _astro,
   __emscripten_stack_restore,
   __emscripten_stack_alloc,
   _emscripten_stack_get_current;
 
 
 function assignWasmExports(wasmExports) {
-  Module['_get'] = _get = wasmExports['get'];
+  Module['_astro'] = _astro = wasmExports['astro'];
   __emscripten_stack_restore = wasmExports['_emscripten_stack_restore'];
   __emscripten_stack_alloc = wasmExports['_emscripten_stack_alloc'];
   _emscripten_stack_get_current = wasmExports['emscripten_stack_get_current'];
