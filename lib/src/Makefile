@@ -27,11 +27,11 @@ SWEOBJ = swedate.o swehouse.o swejpl.o swemmoon.o swemplan.o sweph.o\
 	 swephlib.o swecl.o swehel.o
 
 astro: astro.o libswe.a
-	$(CC) $(OP) --preload-file eph -o astro.js astro.o -s WASM=1 -s  EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]' -L. -lswe -lm -ldl
+	$(CC) $(OP) -o astro.js astro.o -s WASM=1 -s  EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]' -L. -lswe -lm -ldl
 
 install:
 	# mv astro.js ../../js/; mv astro.wasm ../../js/; mv astro.wast ../../js/
-	mv astro.js ../../js/; mv astro.wasm ../../js/; mv astro.data ../../js/
+	mv astro.js ../../js/; mv astro.wasm ../../js/
 
 # create an archive and a dynamic link libary fro SwissEph
 # a user of this library will inlcude swephexp.h  and link with -lswe
@@ -43,7 +43,7 @@ libswe.so: $(SWEOBJ)
 	$(CC) -shared -o libswe.so $(SWEOBJ)
 
 clean:
-	rm -f *.o *.wasm *.wast *.js *.html astro libswe*; rm ../../js/astro.*
+	rm -f *.o *.wasm *.wast *.js *.html astro libswe*; rm ../../js/astro.js ../../js/astro.wasm
 
 ###
 swecl.o: swejpl.h sweodef.h swephexp.h swedll.h sweph.h swephlib.h

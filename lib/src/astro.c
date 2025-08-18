@@ -118,8 +118,7 @@ const char *astro(int year, int month, int day, int hour, int minute, int second
   int length = 0;
   char *sChar = malloc(3);
 
-  swe_set_ephe_path("eph");
-  iflag = SEFLG_SWIEPH | SEFLG_SPEED;
+  iflag = SEFLG_MOSEPH | SEFLG_SPEED;
 
   jut = (double)hour + (double)minute / 60 + (double)second / 3600;
   tjd_ut = swe_julday(year, month, day, jut, SE_GREG_CAL);
@@ -141,7 +140,7 @@ const char *astro(int year, int month, int day, int hour, int minute, int second
 
     iflagret = swe_calc_ut(tjd_ut, p, iflag, x, serr);
 
-    if (iflagret > 0 && (iflagret & SEFLG_SWIEPH))
+    if (iflagret > 0 && (iflagret & SEFLG_MOSEPH))
     {
       swe_get_planet_name(p, snam);
       length += snprintf(Buffer + length, buflen - length,
