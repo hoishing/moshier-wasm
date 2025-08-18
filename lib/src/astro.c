@@ -104,11 +104,11 @@ return_dms:;
   return (s);
 }
 
-const char *astro(int year, int month, int day, int hour, int minute, int second, int lonG, int lonM, int lonS, char *lonEW, int latG, int latM, int latS, char *latNS, char *iHouse, int buflen)
+const char *astro(int year, int month, int day, int hour, int minute, double longitude, double latitude, char *iHouse, int buflen)
 {
   char snam[40], serr[AS_MAXCH];
   double jut = 0.0;
-  double tjd_ut, x[6], lon, lat;
+  double tjd_ut, x[6];
   double cusp[12 + 1];
   double ascmc[10];
   long iflag, iflagret;
@@ -120,13 +120,13 @@ const char *astro(int year, int month, int day, int hour, int minute, int second
 
   iflag = SEFLG_MOSEPH | SEFLG_SPEED;
 
-  jut = (double)hour + (double)minute / 60 + (double)second / 3600;
+  jut = (double)hour + (double)minute / 60.0;
   tjd_ut = swe_julday(year, month, day, jut, SE_GREG_CAL);
 
   length += snprintf(Buffer + length, buflen - length, "{ ");
 
   length += snprintf(Buffer + length, buflen - length,
-                     "\"initDate\":[{ \"year\": %d, \"month\": %d,  \"day\": %d,  \"hour\": %d, \"minute\": %d, \"second\": %d, \"jd_ut\": %f }], ", year, month, day, hour, minute, second, tjd_ut);
+                     "\"initDate\":[{ \"year\": %d, \"month\": %d,  \"day\": %d,  \"hour\": %d, \"minute\": %d, \"jd_ut\": %f }], ", year, month, day, hour, minute, tjd_ut);
 
   length += snprintf(Buffer + length, buflen - length, "\"planets\":[ ");
 
@@ -156,14 +156,7 @@ const char *astro(int year, int month, int day, int hour, int minute, int second
 
   length += snprintf(Buffer + length, buflen - length, "], ");
 
-  lon = lonG + lonM / 60.0 + lonS / 3600.0;
-  if (*lonEW == 'W')
-    lon = -lon;
-  lat = latG + latM / 60.0 + latS / 3600.0;
-  if (*latNS == 'S')
-    lat = -lat;
-
-  swe_houses_ex(tjd_ut, iflag, lat, lon, (int)*iHouse, cusp, ascmc);
+  swe_houses_ex(tjd_ut, iflag, latitude, longitude, (int)*iHouse, cusp, ascmc);
   length += snprintf(Buffer + length, buflen - length, "\"ascmc\":[ ");
   length += snprintf(Buffer + length, buflen - length,
                      "{ \"name\": \"%s\",  \"long\": %f,  \"long_s\": \"%s\" }, ", "Asc", ascmc[0], dms(ascmc[0], round_flag | BIT_ZODIAC));
@@ -186,10 +179,10 @@ const char *astro(int year, int month, int day, int hour, int minute, int second
 
 #if USECASE == OFFLINE
 EMSCRIPTEN_KEEPALIVE
-const char *get(int year, int month, int day, int hour, int minute, int second, int lonG, int lonM, int lonS, char *lonEW, int latG, int latM, int latS, char *latNS, char *iHouse)
+const char *get(int year, int month, int day, int hour, int minute, double longitude, double latitude, char *iHouse)
 {
   int32 buflen;
   buflen = 100000;
-  return astro(year, month, day, hour, minute, second, lonG, lonM, lonS, lonEW, latG, latM, latS, latNS, iHouse, buflen);
+  return astro(year, month, day, hour, minute, longitude, latitude, iHouse, buflen);
 }
 #endif

@@ -28,15 +28,8 @@ self.onmessage = function (messageEvent) {
 // day (number)
 // hour (number, 0-23)
 // minute (number, 0-59)
-// second (number, always 0 - not needed for accuracy)
-// longitude degrees (number)
-// longitude minutes (number)
-// longitude seconds (number)
-// longitude direction (string, "E" or "W")
-// latitude degrees (number)
-// latitude minutes (number)
-// latitude seconds (number)
-// latitude direction (string, "N" or "S")
+// longitude (number, float degrees, negative for West)
+// latitude (number, float degrees, negative for South)
 // house system (string, e.g., "P" for Placidus)
 self.get = function () {
   var calc = self.Module.ccall(
@@ -50,13 +43,6 @@ self.get = function () {
       "number",
       "number",
       "number",
-      "number",
-      "number",
-      "string",
-      "number",
-      "number",
-      "number",
-      "string",
       "string",
     ],
     [
@@ -68,13 +54,6 @@ self.get = function () {
       self.data[5],
       self.data[6],
       self.data[7],
-      self.data[8],
-      self.data[9],
-      self.data[10],
-      self.data[11],
-      self.data[12],
-      self.data[13],
-      self.data[14],
     ]
   );
   return calc;
