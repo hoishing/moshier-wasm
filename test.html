@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astro WASM Web Worker Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .input-data {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .result {
+            background: #f0f8e8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .error {
+            background: #f8e8e8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            color: #d00;
+        }
+        .status {
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Astrological Calculation Test</h1>
+        
+        <div class="input-data">
+            <h3>Input Data:</h3>
+            <div id="input-display"></div>
+        </div>
+        
+        <div class="status" id="status">Initializing web worker...</div>
+        
+        <div class="result" id="result" style="display: none;">
+            <h3>Calculation Result:</h3>
+            <div id="result-content"></div>
+        </div>
+        
+        <div class="error" id="error" style="display: none;">
+            <h3>Error:</h3>
+            <div id="error-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // Input data from input_data.json
+        const inputData = {
+            "year": 1976,
+            "month": 4,
+            "day": 20,
+            "hour": 18,
+            "minute": 58,
+            "latitude": 22.4,
+            "longitude": 114.1,
+            "house": "P"
+        };
+
+        // Convert to worker format
+        const workerData = [
+            inputData.year,
+            inputData.month,
+            inputData.day,
+            inputData.hour,
+            inputData.minute,
+            inputData.longitude,
+            inputData.latitude,
+            inputData.house
+        ];
+
+        // Display input data
+        document.getElementById('input-display').innerHTML = `
+            <strong>Birth Date:</strong> ${inputData.month}/${inputData.day}/${inputData.year} at ${inputData.hour}:${inputData.minute.toString().padStart(2, '0')}<br>
+            <strong>Location:</strong> ${inputData.latitude}°N, ${inputData.longitude}°E<br>
+            <strong>House System:</strong> ${inputData.house} (Placidus)<br>
+            <strong>Worker Data:</strong> [${workerData.join(', ')}]
+        `;
+
+        const statusElement = document.getElementById('status');
+        const resultElement = document.getElementById('result');
+        const resultContentElement = document.getElementById('result-content');
+        const errorElement = document.getElementById('error');
+        const errorContentElement = document.getElementById('error-content');
+
+        function updateStatus(message) {
+            statusElement.textContent = message;
+            console.log('Status:', message);
+        }
+
+        function showResult(result) {
+            resultContentElement.textContent = result;
+            resultElement.style.display = 'block';
+            updateStatus('Calculation completed successfully!');
+        }
+
+        function showError(error) {
+            errorContentElement.textContent = error;
+            errorElement.style.display = 'block';
+            updateStatus('Error occurred during calculation');
+        }
+
+        try {
+            updateStatus('Creating web worker...');
+            
+            // Create web worker
+            const worker = new Worker('./js/sweph.js');
+            
+            // Set up event handlers
+            worker.onmessage = function(event) {
+                console.log('Worker result received:', event.data);
+                showResult(event.data);
+            };
+            
+            worker.onerror = function(error) {
+                console.error('Worker error:', error);
+                showError(`Worker error: ${error.message || error}`);
+            };
+            
+            worker.onmessageerror = function(error) {
+                console.error('Worker message error:', error);
+                showError(`Worker message error: ${error.message || error}`);
+            };
+
+            updateStatus('Sending data to worker...');
+            
+            // Send input data to worker
+            worker.postMessage(workerData);
+            
+            updateStatus('Worker processing... (this may take a moment)');
+            
+            // Set a timeout to detect if worker hangs
+            setTimeout(() => {
+                if (statusElement.textContent.includes('processing')) {
+                    showError('Worker timeout - calculation took longer than expected');
+                }
+            }, 30000); // 30 second timeout
+            
+        } catch (error) {
+            console.error('Failed to create worker:', error);
+            showError(`Failed to create worker: ${error.message}`);
+        }
+    </script>
+</body>
+</html>
