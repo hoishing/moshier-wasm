@@ -18,91 +18,44 @@
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
+#include <ctype.h>
 #include "swephexp.h"
 
 #if USECASE == OFFLINE
 #include <emscripten.h>
 #endif
 
-#define MY_ODEGREE_STRING "°"
-#define BIT_ROUND_SEC 1
-#define BIT_ROUND_MIN 2
-#define BIT_ZODIAC 4
-#define PLSEL_D "0123456789mtABC"
-#define PLSEL_P "0123456789mtABCDEFGHI"
-#define PLSEL_H "JKLMNOPQRSTUVWX"
-#define PLSEL_A "0123456789mtABCDEFGHIJKLMNOPQRSTUVWX"
+// Removed unused DMS and zodiac constants
 
-static char *zod_nam[] = {"ar", "ta", "ge", "cn", "le", "vi",
-                          "li", "sc", "sa", "cp", "aq", "pi"};
-
-// static char *dms(double x, long iflag) code from sweph
-static char *dms(double x, long iflag)
-{
-  int izod;
-  long k, kdeg, kmin, ksec;
-  char *c = MY_ODEGREE_STRING;
-  char *sp, s1[50];
-  static char s[50];
-  int sgn;
-  *s = '\0';
-  if (iflag & SEFLG_EQUATORIAL)
-    strcpy(c, "h");
-  if (x < 0)
-  {
-    x = -x;
-    sgn = -1;
+// Function to convert planet name to lowercase
+static void to_lowercase(char *str) {
+  for (int i = 0; str[i]; i++) {
+    str[i] = tolower(str[i]);
   }
-  else
-    sgn = 1;
-  if (iflag & BIT_ROUND_MIN)
-    x += 0.5 / 60;
-  if (iflag & BIT_ROUND_SEC)
-    x += 0.5 / 3600;
-  if (iflag & BIT_ZODIAC)
-  {
-    izod = (int)(x / 30);
-    x = fmod(x, 30);
-    kdeg = (long)x;
-    sprintf(s, "%2ld %s ", kdeg, zod_nam[izod]);
-  }
-  else
-  {
-    kdeg = (long)x;
-    sprintf(s, " %3ld%s", kdeg, c);
-  }
-  x -= kdeg;
-  x *= 60;
-  kmin = (long)x;
-  if ((iflag & BIT_ZODIAC) && (iflag & BIT_ROUND_MIN))
-    sprintf(s1, "%2ld", kmin);
-  else
-    sprintf(s1, "%2ld'", kmin);
-  strcat(s, s1);
-  if (iflag & BIT_ROUND_MIN)
-    goto return_dms;
-  x -= kmin;
-  x *= 60;
-  ksec = (long)x;
-  if (iflag & BIT_ROUND_SEC)
-    sprintf(s1, "%2ld\"", ksec);
-  else
-    sprintf(s1, "%2ld", ksec);
-  strcat(s, s1);
-  if (iflag & BIT_ROUND_SEC)
-    goto return_dms;
-  x -= ksec;
-  k = (long)(x * 10000);
-  sprintf(s1, ".%04ld", k);
-  strcat(s, s1);
-return_dms:;
-  if (sgn < 0)
-  {
-    sp = strpbrk(s, "0123456789");
-    *(sp - 1) = '-';
-  }
-  return (s);
 }
+
+// Special handling for planet names
+static void get_planet_name_lower(int planet_id, char *name) {
+  switch(planet_id) {
+    case 0: strcpy(name, "sun"); break;
+    case 1: strcpy(name, "moon"); break;
+    case 2: strcpy(name, "mercury"); break;
+    case 3: strcpy(name, "venus"); break;
+    case 4: strcpy(name, "mars"); break;
+    case 5: strcpy(name, "jupiter"); break;
+    case 6: strcpy(name, "saturn"); break;
+    case 7: strcpy(name, "uranus"); break;
+    case 8: strcpy(name, "neptune"); break;
+    case 9: strcpy(name, "pluto"); break;
+    case 10: strcpy(name, "mean node"); break;
+    default: 
+      swe_get_planet_name(planet_id, name);
+      to_lowercase(name);
+      break;
+  }
+}
+
+// DMS function removed - no longer needed for simplified output
 
 #if USECASE == OFFLINE
 EMSCRIPTEN_KEEPALIVE
@@ -116,68 +69,68 @@ const char *astro(int year, int month, int day, int hour, int minute, double lon
   double ascmc[10];
   long iflag, iflagret;
   int p, i;
-  int round_flag = 0;
-  int32 buflen = 100000;
+  int32 buflen = 50000; // Reduced buffer size since we're generating less data
   char *Buffer = malloc(buflen);
   int length = 0;
-  char *sChar = malloc(3);
+  int first_planet = 1;
 
   iflag = SEFLG_MOSEPH | SEFLG_SPEED;
 
   jut = (double)hour + (double)minute / 60.0;
   tjd_ut = swe_julday(year, month, day, jut, SE_GREG_CAL);
 
+  // Start JSON output with simplified structure
   length += snprintf(Buffer + length, buflen - length, "{ ");
+  length += snprintf(Buffer + length, buflen - length, "\"jd_ut\": %f, ", tjd_ut);
+  length += snprintf(Buffer + length, buflen - length, "\"planets\": [");
 
-  length += snprintf(Buffer + length, buflen - length,
-                     "\"initDate\":[{ \"year\": %d, \"month\": %d,  \"day\": %d,  \"hour\": %d, \"minute\": %d, \"jd_ut\": %f }], ", year, month, day, hour, minute, tjd_ut);
-
-  length += snprintf(Buffer + length, buflen - length, "\"planets\":[ ");
-
+  // Process planets with simplified output
   for (p = SE_SUN; p <= SE_MEAN_NODE; p++)
   {
     if (p == SE_EARTH)
       continue;
-    strcpy(sChar, ", ");
-    if (p == SE_MEAN_NODE)
-      strcpy(sChar, " ");
 
     iflagret = swe_calc_ut(tjd_ut, p, iflag, x, serr);
 
     if (iflagret > 0 && (iflagret & SEFLG_MOSEPH))
     {
-      swe_get_planet_name(p, snam);
+      // Add comma separator for all planets except the first
+      if (!first_planet) {
+        length += snprintf(Buffer + length, buflen - length, ", ");
+      }
+      first_planet = 0;
+
+      get_planet_name_lower(p, snam);
+      
+      // Determine if planet is retrograde (speed < 0)
+      int is_retro = (x[3] < 0.0) ? 1 : 0;
+      
       length += snprintf(Buffer + length, buflen - length,
-                         " { \"index\": %d, \"name\": \"%s\",  \"long\": %f,  \"lat\": %f, \"distance\": %f, \"speed\": %f, \"long_s\": \"%s\", \"iflagret\": %ld, \"error\": %d }%s", p, snam, x[0], x[1], x[2], x[3], dms(x[0], round_flag | BIT_ZODIAC), iflagret, 0, sChar);
-    }
-    else
-    {
-      swe_get_planet_name(p, snam);
-      length += snprintf(Buffer + length, buflen - length,
-                         " { \"index\": %d, \"name\": \"%s\",  \"long\": %f,  \"lat\": %f, \"distance\": %f, \"speed\": %f, \"long_s\": \"%s\", \"iflagret\": %ld, \"error\": %d }%s", p, snam, 0.0, 0.0, 0.0, 0.0, "", iflagret, 1, sChar);
+                         "{\"name\": \"%s\", \"long\": %f, \"retro\": %s}", 
+                         snam, x[0], is_retro ? "true" : "false");
     }
   }
 
   length += snprintf(Buffer + length, buflen - length, "], ");
 
+  // Calculate houses and ascmc
   swe_houses_ex(tjd_ut, iflag, latitude, longitude, (int)*iHouse, cusp, ascmc);
-  length += snprintf(Buffer + length, buflen - length, "\"ascmc\":[ ");
-  length += snprintf(Buffer + length, buflen - length,
-                     "{ \"name\": \"%s\",  \"long\": %f,  \"long_s\": \"%s\" }, ", "Asc", ascmc[0], dms(ascmc[0], round_flag | BIT_ZODIAC));
-  length += snprintf(Buffer + length, buflen - length,
-                     " { \"name\": \"%s\",  \"long\": %f,  \"long_s\": \"%s\" } ", "MC", ascmc[1], dms(ascmc[1], round_flag | BIT_ZODIAC));
-  length += snprintf(Buffer + length, buflen - length, "], ");
+  
+  // Add asc and mc as simple numbers
+  length += snprintf(Buffer + length, buflen - length, "\"asc\": %f, ", ascmc[0]);
+  length += snprintf(Buffer + length, buflen - length, "\"mc\": %f, ", ascmc[1]);
 
-  length += snprintf(Buffer + length, buflen - length, "\"house\":[ ");
+  // Add houses as simple array of longitude values
+  length += snprintf(Buffer + length, buflen - length, "\"houses\": [");
   for (i = 1; i <= 12; i++)
   {
-    strcpy(sChar, ", ");
-    if (i == 12)
-      strcpy(sChar, " ");
-    length += snprintf(Buffer + length, buflen - length,
-                       " { \"name\": \"%d\",  \"long\": %f,  \"long_s\": \"%s\" }%s ", i, cusp[i], dms(cusp[i], round_flag | BIT_ZODIAC), sChar);
+    if (i > 1) {
+      length += snprintf(Buffer + length, buflen - length, ", ");
+    }
+    length += snprintf(Buffer + length, buflen - length, "%f", cusp[i]);
   }
   length += snprintf(Buffer + length, buflen - length, "]}");
+  
   return Buffer;
 }
 
