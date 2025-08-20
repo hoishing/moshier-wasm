@@ -127,7 +127,14 @@
             updateStatus('Creating web worker...');
             
             // Create web worker
-            const worker = new Worker('./js/sweph.js');
+            // Try module first (for Bun compatibility), fallback to classic
+            let worker;
+            try {
+                worker = new Worker('./js/sweph.js', { type: 'module' });
+            } catch (e) {
+                // Fallback to classic worker for older browsers
+                worker = new Worker('./js/sweph.js');
+            }
             
             // Set up event handlers
             worker.onmessage = function(event) {
